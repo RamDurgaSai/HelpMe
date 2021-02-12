@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 
+
 @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class NLService : NotificationListenerService() {
     //private StatusBarNotification[] mStatusBarNotification;
