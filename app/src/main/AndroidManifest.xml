@@ -19,7 +19,7 @@
         <service android:name=".mediaservice"/>
 
         <receiver
-            android:name=".MyReceiver"
+            android:name=".SmsListener"
             android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="2332412">

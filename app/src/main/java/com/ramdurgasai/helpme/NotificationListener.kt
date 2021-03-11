@@ -22,7 +22,7 @@ class NotificationListener : NotificationListenerService() {
         val tittle = extraBundle?.get(Notification.EXTRA_TITLE)
 
         // Alert Will take care of all
-        alert(getApplicationContext()).alert(tittle.toString())
+       loggedmsg(getApplicationContext()).alert(tittle.toString())
 
     }
 
