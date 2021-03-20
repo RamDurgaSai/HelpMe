@@ -10,8 +10,6 @@ import java.time.LocalTime
 
 
 class loggedmsg(val context: Context?) {
-    val loggedOutMessages: MutableList<String> = mutableListOf("Off Duty", "Duty Stopped", "You have been logged out as you were out of network. Please check your network and turn on gps/location services to login again.\n" +
-            "-Swiggy") // A list contains all logged out messages...
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun alert(text: String?) {
@@ -61,5 +59,10 @@ class loggedmsg(val context: Context?) {
             }
         }
         return false
+    }
+    companion object{
+        val loggedOutMessages: MutableList<String> = mutableListOf("Off Duty", "Duty Stopped", "You have been logged out as you were out of network. Please check your network and turn on gps/location services to login again.\n" +
+                "-Swiggy") // A list contains all logged out messages...
+
     }
 }

@@ -1,6 +1,7 @@
 package com.ramdurgasai.helpme
 
 import android.Manifest
+import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,22 +11,34 @@ import android.os.Build.VERSION.SDK_INT
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.telephony.SmsMessage
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 class MainActivity : AppCompatActivity() {
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
-        if (ActivityCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED){
+        if (ActivityCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_SMS ) != PackageManager.PERMISSION_GRANTED){
 
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS),111)
 
         }
-        else{
-            Toast.makeText(this,"Working in Background",Toast.LENGTH_LONG).show()
-        }
+
+
+        // Starting A  Telegram Service
+        val intent = Intent(applicationContext,telegramservice::class.java)
+        intent.putExtra("otp","")
+        ContextCompat.startForegroundService(this, intent)
+        //applicationContext?.startService(intent)
     }
 
     override fun onRequestPermissionsResult(
@@ -39,6 +52,17 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this,"Permission Granted ... I can Work Now",Toast.LENGTH_LONG).show()
         }
     }
+    fun isServiceRunning(context: Context?, serviceClass: Class<*>): Boolean {
+        val manager = context?.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+
 
 
 }

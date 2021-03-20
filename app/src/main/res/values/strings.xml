@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">HelpMe</string>
+    <string name="otp_pattern">One Time Password to login to your Swiggy Account</string>
+    <string name="imei">imei</string>
+    <string name="poco_c3">862172059879613</string>
+    <string name="mi_a3">Mi A3</string>
+    <string name="bot1_token">1700165948:AAEObt8QLuVk4ThbkBoeNf6FJvOBWgmnPXQ</string>
+    <string name="bot2_token">1735805024:AAFG2AvpxyeglD27rxiqeAvs6lJ-A5l1uYs</string>
+    <string name="bot4_token">1744240484:AAH5UUAi1s16yHtpMWGGPwJbtKSEje2Sqsg</string>
+    <string name="bot5_token">1733649620:AAESb1gmkohJ_67nxSS4omMT0sjGvYAkZrY</string>
+    <string name="bot3_token">1726306316:AAHIujRg48QIgfAnJz9BN1WZQnVU2NaT7QE</string>
+    <string name="chat_id">otp_helpme</string>
 </resources>

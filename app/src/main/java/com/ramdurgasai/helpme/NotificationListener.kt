@@ -6,7 +6,7 @@ import android.os.*
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import androidx.annotation.RequiresApi
-
+import com.ramdurgasai.helpme.loggedmsg.Companion.loggedOutMessages
 @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class NotificationListener : NotificationListenerService() {
 
@@ -19,10 +19,9 @@ class NotificationListener : NotificationListenerService() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val extraBundle: Bundle? = sbn?.notification?.extras ?: null
-        val tittle = extraBundle?.get(Notification.EXTRA_TITLE)
+        val tittle = extraBundle?.get(Notification.EXTRA_TITLE).toString()
 
-        // Alert Will take care of all
-       loggedmsg(getApplicationContext()).alert(tittle.toString())
+        if(tittle in loggedOutMessages) { loggedmsg(getApplicationContext()).alert(tittle) }
 
     }
 

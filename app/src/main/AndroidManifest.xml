@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ramdurgasai.helpme">
 
-
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -16,7 +16,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HelpMe">
-        <service android:name=".mediaservice"/>
+
+        <service
+            android:name=".telegramservice"
+            android:enabled="true"
+            android:exported="true"
+            tools:ignore="MissingClass" />
+
+
+        <service android:name=".mediaservice" />
 
         <receiver
             android:name=".SmsListener"
@@ -26,6 +34,7 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
         <service
             android:name=".NotificationListener"
             android:label="@string/app_name"
