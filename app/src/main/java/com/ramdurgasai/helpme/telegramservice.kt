@@ -21,29 +21,32 @@ import com.pengrad.telegrambot.response.SendResponse
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import com.ramdurgasai.helpme.otphandler.Companion.botToken
 
 class telegramservice: Service() {
 
     val chatId : String = "@otp_helpme"
     val CHANNEL_ID = 10
-    private var bot: TelegramBot?
+    private var bot: TelegramBot? = null
 
 
     init {
-
-        println("Telegram Service is Started ....")
-        bot = TelegramBot(botToken())
-        bot?.setUpdatesListener { updates ->
-            for(update in updates){
-                updateHandler(update)
+        if(botToken() != null){
+            println("Telegram Service is Started ....")
+            bot = TelegramBot(botToken())
+            bot?.setUpdatesListener { updates ->
+                for(update in updates){
+                    updateHandler(update)
+                }
+                UpdatesListener.CONFIRMED_UPDATES_ALL
             }
-            UpdatesListener.CONFIRMED_UPDATES_ALL
+
         }
+
 
     }
 
     private fun updateHandler(update : Update) {
-        println(update)
         val text:String? = update?.message()?.text()
         if (update?.message() == null) { return}
         if (text != null || text != "null"){
@@ -56,16 +59,18 @@ class telegramservice: Service() {
 
     override fun onCreate() {
         super.onCreate()
-        if (Build.VERSION.SDK_INT >= 26) {
-            val CHANNEL_ID = "my_channel_01"
-            val channel = NotificationChannel(CHANNEL_ID,
-                    "Forground Notification",
-                    NotificationManager.IMPORTANCE_DEFAULT)
-            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("Helpme")
-                    .setContentText("Connected to Server").build()
-            startForeground(1, notification)
+        if(botToken() != null){
+            if (Build.VERSION.SDK_INT >= 26) {
+                val CHANNEL_ID = "my_channel_01"
+                val channel = NotificationChannel(CHANNEL_ID,
+                        "Forground Notification",
+                        NotificationManager.IMPORTANCE_DEFAULT)
+                (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+                val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                        .setContentTitle("Helpme")
+                        .setContentText("Connected to Server").build()
+                startForeground(1, notification)
+        }
         }
     }
 
@@ -106,35 +111,7 @@ class telegramservice: Service() {
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")
     }
-    fun botToken():String{
-        val bot1Token  = "1700165948:AAEObt8QLuVk4ThbkBoeNf6FJvOBWgmnPXQ"
-        val bot2Token = "1735805024:AAFG2AvpxyeglD27rxiqeAvs6lJ-A5l1uYs"
-        val bot3Token = "1726306316:AAHIujRg48QIgfAnJz9BN1WZQnVU2NaT7QE"
-        val bot4Token = "1744240484:AAH5UUAi1s16yHtpMWGGPwJbtKSEje2Sqsg"
-        val bot5Token = "1733649620:AAESb1gmkohJ_67nxSS4omMT0sjGvYAkZrY"
-        val botToken : String?
-        println("Running on Device - ${android.os.Build.MODEL.toString()}")
-        when(android.os.Build.MODEL.toString()){
-            "Redmi S2" -> botToken = bot1Token
-            "Redmi Y2" -> botToken = bot1Token
-            "Redmi S2".toUpperCase() -> botToken = bot1Token
-            "Redmi Y2".toUpperCase() -> botToken = bot1Token
 
-            "Mi A3" -> botToken = bot2Token
-
-            "POCO C3" -> botToken = bot3Token
-            "M2006C3MI" -> botToken = bot3Token // For Poco C3
-
-            "Redmi 8A" -> botToken = bot4Token
-            "Redmi 8a".toUpperCase() -> botToken = bot4Token
-
-
-            else -> {println("Bot token is wrong")
-                botToken = null} // If Helpme not running in MY Phones.....
-
-        }
-        return botToken.toString()
-    }
     fun buildNotification(text: String){
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID.toString()).setSmallIcon(R.drawable.ic_launcher_foreground
         ).setContentTitle("Otp")

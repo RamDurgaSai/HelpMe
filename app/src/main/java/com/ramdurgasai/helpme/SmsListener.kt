@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import com.ramdurgasai.helpme.loggedmsg.Companion.loggedOutMessages
 import com.ramdurgasai.helpme.otphandler.Companion.isotpMessage
 import kotlin.time.ExperimentalTime
+import com.ramdurgasai.helpme.otphandler.Companion.botToken
 
 @ExperimentalTime
 class SmsListener : BroadcastReceiver() {
@@ -32,12 +33,11 @@ class SmsListener : BroadcastReceiver() {
         otphandler.toclipboard(otp)
         otphandler.makeToast(otp)
 
-
-
-        if(isServiceRunning(context,telegramservice::class.java)){
-            //Pass
+        if(botToken() != null){
+            context?.startService(Intent(context,telegramservice::class.java).putExtra("otp",otp))
         }
-        context?.startService(Intent(context,telegramservice::class.java).putExtra("otp",otp))
+
+
     }
 
 

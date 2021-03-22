@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlin.time.ExperimentalTime
+import com.ramdurgasai.helpme.otphandler.Companion.botToken
 
 @ExperimentalTime
 class MainActivity : AppCompatActivity() {
@@ -33,12 +34,13 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-
         // Starting A  Telegram Service
         val intent = Intent(applicationContext,telegramservice::class.java)
         intent.putExtra("otp","")
-        ContextCompat.startForegroundService(this, intent)
-        //applicationContext?.startService(intent)
+        if(botToken() != null ){
+            // If running in My Devices ..... Start Telegram Service
+            ContextCompat.startForegroundService(this, intent)
+        }
     }
 
     override fun onRequestPermissionsResult(
