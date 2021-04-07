@@ -3,33 +3,49 @@ package com.ramdurgasai.helpme
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
+import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import java.time.LocalTime
+import java.util.prefs.PreferenceChangeEvent
 
 
 class loggedmsg(val context: Context?) {
 
+
     @RequiresApi(Build.VERSION_CODES.O)
-    fun alert(text: String?) {
+    fun alert(text: String?) {// If Logged Out In Duty Time
+        val sharedPreference = context?.getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
+        val isDNDActive = sharedPreference?.getBoolean("DND", false);
+
         if (isDutyTime() && text in loggedOutMessages) {
-            // If Logged Out In Duty Time
             Toast.makeText(context, "Duty is Stopped Check The App Once", Toast.LENGTH_SHORT).show()
+            val intent = Intent(context,mediaservice::class.java)
+
+
+            if(isDNDActive == true){ // If DND Mode is ON
+                Toast.makeText(context, "It's DND Time  ...That's Why I am not making any noise", Toast.LENGTH_LONG).show()
+
+                intent.putExtra("OnlyVibrate",isDNDActive)
+
+            }
 
             if(isServiceRunning(context,mediaservice::class.java)){
                 // If Already alerting user....( Service already running)
-                Toast.makeText(context,"Again Duty is stopped ... Check the Once",Toast.LENGTH_LONG).show()
+                Toast.makeText(context,"Again Duty is stopped ..... Check the Once",Toast.LENGTH_LONG).show()
 
-            }else{
-                context?.startService(Intent(context,mediaservice::class.java))
+            }else{// Starting Service
+                context?.startService(intent)
             }
 
 
         } else if (text in loggedOutMessages) {
             // If logged out when not in Duty
             Toast.makeText(context, "Duty is Stopped Check The App Once", Toast.LENGTH_SHORT).show()
-            Toast.makeText(context, "It's not Duty Time ... So I am not making any noise", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "It's not Duty Time ... That's Why I am not making any noise", Toast.LENGTH_LONG).show()
+
 
         }
 
@@ -41,14 +57,11 @@ class loggedmsg(val context: Context?) {
         // If Current Time is  Duty Time then returns true else false
         val currentHour: Int? = LocalTime.now().hour
         val currentMinute: Int? = LocalTime.now().minute
-
         if (currentHour != null && currentMinute != null) {
             if (currentHour == 10) return currentMinute in 30..59
-            if (currentHour == 23) return currentMinute in 0..30
+            if (currentHour == 23) return currentMinute in 0..10 // Decreased Time from 11:30 to 11:10
             return currentHour in 10..23
         } else return false
-
-        return false
     }
 
     fun isServiceRunning(context: Context?, serviceClass: Class<*>): Boolean {

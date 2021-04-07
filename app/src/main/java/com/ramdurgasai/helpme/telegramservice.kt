@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.pengrad.telegrambot.Callback
@@ -23,6 +24,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.ramdurgasai.helpme.otphandler.Companion.botToken
 
+@RequiresApi(Build.VERSION_CODES.O)
 class telegramservice: Service() {
 
     val chatId : String = "@otp_helpme"
@@ -30,22 +32,36 @@ class telegramservice: Service() {
     private var bot: TelegramBot? = null
 
 
-    init {
-        if(botToken() != null){
-            println("Telegram Service is Started ....")
-            bot = TelegramBot(botToken())
-            bot?.setUpdatesListener { updates ->
-                for(update in updates){
-                    updateHandler(update)
-                }
-                UpdatesListener.CONFIRMED_UPDATES_ALL
-            }
 
+    override fun onCreate() {
+        super.onCreate()
+        val sharedPreference = applicationContext.getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
+        val botToken = sharedPreference?.getString("botToken" ,null)
+
+        if(botToken == null){ return} // Skip If no botToken
+
+        println("Telegram Service is Started ....")
+        bot = TelegramBot(botToken.toString())
+        bot?.setUpdatesListener { updates ->
+            for(update in updates){
+                updateHandler(update)
+            }
+            UpdatesListener.CONFIRMED_UPDATES_ALL
         }
 
+        if (Build.VERSION.SDK_INT >= 26) {
+            val CHANNEL_ID = "my_channel_01"
+            val channel = NotificationChannel(CHANNEL_ID,
+                    "Forground Notification",
+                    NotificationManager.IMPORTANCE_DEFAULT)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Helpme")
+                    .setContentText("Connected to Server").build()
+            startForeground(1, notification)
 
+        }
     }
-
     private fun updateHandler(update : Update) {
         val text:String? = update?.message()?.text()
         if (update?.message() == null) { return}
@@ -53,24 +69,6 @@ class telegramservice: Service() {
             makeToast("Otp : " + text + " from server !" )
             otphandler(applicationContext).toclipboard(text.toString())
             buildNotification(text.toString())
-        }
-    }
-
-
-    override fun onCreate() {
-        super.onCreate()
-        if(botToken() != null){
-            if (Build.VERSION.SDK_INT >= 26) {
-                val CHANNEL_ID = "my_channel_01"
-                val channel = NotificationChannel(CHANNEL_ID,
-                        "Forground Notification",
-                        NotificationManager.IMPORTANCE_DEFAULT)
-                (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-                val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setContentTitle("Helpme")
-                        .setContentText("Connected to Server").build()
-                startForeground(1, notification)
-        }
         }
     }
 
@@ -124,6 +122,7 @@ class telegramservice: Service() {
         }
 
     }
+
 }
 
 

@@ -20,10 +20,19 @@ class mediaservice:Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        setmaxvolume() // Set Max Volume
-        var vibrator = vibrate() // Let's Vibrate the Device
+        val isOnlyVibrate = intent?.getBooleanExtra("OnlyVibrate",false)
 
-        var mediaPlayer: MediaPlayer? = MediaPlayer.create(applicationContext, R.raw.alert)
+        val vibrator = vibrate() // Let's Vibrate
+
+        if (isOnlyVibrate == true){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                setMinVolume()
+            }
+        }else{
+            setMaxVolume()
+        }
+
+        val mediaPlayer: MediaPlayer? = MediaPlayer.create(applicationContext, R.raw.alert)
         mediaPlayer?.start()
 
         mediaPlayer?.setOnCompletionListener {
@@ -46,9 +55,14 @@ class mediaservice:Service() {
         super.onDestroy()
     }
 
-    fun setmaxvolume(){
+    fun setMaxVolume(){
         val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0)
+    }
+    @RequiresApi(Build.VERSION_CODES.P)
+    fun setMinVolume(){
+        val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC), 0)
     }
     @RequiresApi(Build.VERSION_CODES.O)
     fun vibrate():Vibrator{

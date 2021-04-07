@@ -13,6 +13,7 @@ import com.ramdurgasai.helpme.loggedmsg.Companion.loggedOutMessages
 import com.ramdurgasai.helpme.otphandler.Companion.isotpMessage
 import kotlin.time.ExperimentalTime
 import com.ramdurgasai.helpme.otphandler.Companion.botToken
+import com.ramdurgasai.helpme.Imei
 
 @ExperimentalTime
 class SmsListener : BroadcastReceiver() {
@@ -28,13 +29,15 @@ class SmsListener : BroadcastReceiver() {
         }
         }
 
-    fun otpHandler(otp: String,context: Context?){
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun otpHandler(otp: String, context: Context?){
         val otphandler = otphandler(context)
         otphandler.toclipboard(otp)
         otphandler.makeToast(otp)
-
-        if(botToken() != null){
-            context?.startService(Intent(context,telegramservice::class.java).putExtra("otp",otp))
+        val sharedPreference = context?.getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
+        val botToken = sharedPreference?.getString("botToken" ,null)
+        if(botToken != null ){
+            context.startService(Intent(context,telegramservice::class.java).putExtra("otp",otp))
         }
 
 
@@ -58,15 +61,6 @@ class SmsListener : BroadcastReceiver() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> SmsMessage.createFromPdu(pdu, format)
             else -> SmsMessage.createFromPdu(pdu)
         }
-    }
-    fun isServiceRunning(context: Context?, serviceClass: Class<*>): Boolean {
-        val manager = context?.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                return true
-            }
-        }
-        return false
     }
 
 
