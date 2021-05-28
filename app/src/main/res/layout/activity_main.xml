@@ -8,30 +8,54 @@
     tools:context=".MainActivity">
 
 
-    <TextView
-        android:id="@+id/info_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="You Will be Notified"
-        android:textSize="25sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.447"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.092" />
-
     <Switch
-        android:id="@+id/switch1"
+        android:id="@+id/dndSwitch"
         android:layout_width="306dp"
         android:layout_height="29dp"
-        android:layout_marginTop="98dp"
+        android:layout_marginBottom="16dp"
         android:text="DND Mode"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/channel_id_text_input"
+        android:layout_width="189dp"
+        android:layout_height="51dp"
+        android:editable="true"
+        android:ems="10"
+        android:hint="Channel Id"
+        android:inputType="textPersonName"
+        android:isScrollContainer="false"
+        app:layout_constraintBottom_toTopOf="@+id/bot_token_text_input"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/info_label"
-        app:layout_constraintVertical_bias="0.924" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.79" />
+
+    <EditText
+        android:id="@+id/bot_token_text_input"
+        android:layout_width="223dp"
+        android:layout_height="85dp"
+        android:layout_marginBottom="48dp"
+        android:editable="true"
+        android:ems="10"
+        android:hint="Bot Token"
+        android:isScrollContainer="true"
+        app:layout_constraintBottom_toTopOf="@+id/save_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="240dp"
+        android:text="Save"
+        app:layout_constraintBottom_toTopOf="@+id/dndSwitch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

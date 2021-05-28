@@ -1,19 +1,14 @@
 package com.ramdurgasai.helpme
 
 
-import android.app.ActivityManager
 import android.content.*
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.telephony.SmsMessage
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.ramdurgasai.helpme.loggedmsg.Companion.loggedOutMessages
 import com.ramdurgasai.helpme.otphandler.Companion.isotpMessage
 import kotlin.time.ExperimentalTime
-import com.ramdurgasai.helpme.otphandler.Companion.botToken
-import com.ramdurgasai.helpme.Imei
 
 @ExperimentalTime
 class SmsListener : BroadcastReceiver() {
@@ -24,7 +19,7 @@ class SmsListener : BroadcastReceiver() {
 
         when(smsText){
             in loggedOutMessages -> loggedmsg(context).alert(smsText) //If it is logged out message
-            isotpMessage(smsText) -> otpHandler(smsText.slice(6..13),context) // If it is Otp
+            isotpMessage(smsText) -> otpHandler(extractOtp(smsText),context)
 
         }
         }
@@ -42,7 +37,13 @@ class SmsListener : BroadcastReceiver() {
 
 
     }
+    fun extractOtp(smsText: String):String {
 
+            val re = Regex("\\[(.*?)\\]")
+            val result: MatchResult? = re.find(smsText)
+
+            return result?.value?.slice(1..8).toString()
+    }
 
     private fun getTextFromSms(extras: Bundle?): String {
         val pdus = extras?.get("pdus") as Array<*>

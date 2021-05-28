@@ -5,23 +5,21 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.os.Bundle
-import android.telephony.TelephonyManager
 import android.view.View
+import android.widget.Button
 import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
-import com.ramdurgasai.helpme.otphandler.Companion.botToken
-import com.ramdurgasai.helpme.Imei
 import java.io.*
-import java.lang.Exception
 import kotlin.time.ExperimentalTime
+import com.pengrad.telegrambot.TelegramBot
+import java.lang.Exception
 
 
 @ExperimentalTime
@@ -30,32 +28,54 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sharedPreference =  getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
-        val editor = sharedPreference.edit()
         setContentView(R.layout.activity_main)
 
-        // Get BotToken By using Device Imei and details
-        var deviceIMEI: String? = null
-        try {
-            deviceIMEI = Imei(applicationContext).imei
-        }catch (e: Exception){
-            e.printStackTrace()
+        // Get Shared Preference
+        val sp =  getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
+        val editor = sp.edit()
 
+        // Init Widgets
+        val channelIdTextInput = findViewById<TextView>(R.id.channel_id_text_input)
+        val botTokenTextInput = findViewById<TextView>(R.id.bot_token_text_input)
+        val saveButton = findViewById<Button>(R.id.save_button)
+        val dndModeButton = findViewById<Switch>(R.id.dndSwitch)
+
+        // Load Values to Widgets
+        channelIdTextInput.text = sp.getString("channelId","")
+        botTokenTextInput.text = sp.getString("botToken","")
+        dndModeButton.isChecked = sp.getBoolean("DND",false)
+
+        //Set Click Listeners
+        saveButton.setOnClickListener{view: View? -> when(view?.id){
+            R.id.save_button -> {
+                val botToken = botTokenTextInput.text.toString()
+                val channelId = channelIdTextInput.text.toString()
+                if (botToken == "" || channelId == "" ){
+                    Toast.makeText(this,"botToken or channelId can't be Empty",Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                try {
+                    val bot = TelegramBot(botToken)
+                }catch (e: Exception){
+                    Toast.makeText(this,"botToken is invalid/not accepted",Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                editor.putString("botToken",botToken).apply()
+                editor.putString("channelId",channelId).apply()
+                Toast.makeText(this,"Updated Successfully",Toast.LENGTH_LONG).show()
+
+            }
+        }
         }
 
-        editor.putString("botToken", botToken(deviceIMEI))
-        editor.commit()
-        println("Device IMEI is : " + deviceIMEI.toString())
-
-
-        val button = findViewById<Switch>(R.id.switch1)
-        button.setOnClickListener { view: View? -> when(view?.id){
-            R.id.switch1 -> {
-
-                val switch: Switch = findViewById(R.id.switch1)
-                editor.putBoolean("DND", switch.isChecked)
-                editor.commit()
-
+        dndModeButton.setOnClickListener { view: View? -> when(view?.id){
+            R.id.dndSwitch -> {
+                editor.putBoolean("DND", dndModeButton.isChecked).apply()
+                if(dndModeButton.isChecked){
+                    Toast.makeText(this,"DND is Activated",Toast.LENGTH_LONG).show()
+                }else{
+                    Toast.makeText(this,"DND is Deactivated",Toast.LENGTH_LONG).show()
+                }
             }
         } }
 
@@ -63,25 +83,15 @@ class MainActivity : AppCompatActivity() {
 
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED){
-
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS), 111)
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
-
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_PHONE_STATE),
-                111
-            )
         }
 
         // Starting A  Telegram Service
-        val intent = Intent(applicationContext, telegramservice::class.java)
-        intent.putExtra("otp", "")
-
-        if(botToken(deviceIMEI) != null && !isServiceRunning(this,telegramservice::class.java) ){
-            // If running in My Devices ..... Start Telegram Service
+        if (sp.getString("botToken","") != "" && !isServiceRunning(this,telegramservice::class.java)){
+            val intent = Intent(applicationContext, telegramservice::class.java)
+            intent.putExtra("otp", "")
             ContextCompat.startForegroundService(this, intent)
+
         }
     }
 

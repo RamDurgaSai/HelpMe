@@ -20,14 +20,15 @@ import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.response.SendResponse
 import java.io.IOException
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
-import com.ramdurgasai.helpme.otphandler.Companion.botToken
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 class telegramservice: Service() {
 
-    val chatId : String = "@otp_helpme"
+    var channelId : String? = null
     val CHANNEL_ID = 10
     private var bot: TelegramBot? = null
 
@@ -36,6 +37,7 @@ class telegramservice: Service() {
     override fun onCreate() {
         super.onCreate()
         val sharedPreference = applicationContext.getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
+        channelId =  "@" + sharedPreference.getString("channelId",null)
         val botToken = sharedPreference?.getString("botToken" ,null)
 
         if(botToken == null){ return} // Skip If no botToken
@@ -63,29 +65,40 @@ class telegramservice: Service() {
         }
     }
     private fun updateHandler(update : Update) {
-        val text:String? = update?.message()?.text()
-        if (update?.message() == null) { return}
-        if (text != null || text != "null"){
-            makeToast("Otp : " + text + " from server !" )
-            otphandler(applicationContext).toclipboard(text.toString())
-            buildNotification(text.toString())
+        val post = update.channelPost()
+        var chat_id: String? = null
+        if(post != null){
+                chat_id = post.chat().username().toString()
+        }else{ return }
+
+        if(post != null && chat_id != channelId){
+            val text = post.text()
+            if (text != null || text != "null"){
+                makeToast("Otp : " + text + " from server !" )
+                otphandler(applicationContext).toclipboard(text.toString())
+                buildNotification(text.toString())
+            }
+
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        println("On Start command is called In Telegram Service")
-
-        if (intent?.getStringExtra("otp") != ""){
-            val sendMessage = SendMessage(chatId, intent?.getStringExtra("otp"))
-
-            bot?.execute(sendMessage, object : Callback<SendMessage?, SendResponse?> {
-                override fun onResponse(request: SendMessage?, response: SendResponse?) {}
-                override fun onFailure(request: SendMessage?, e: IOException?) {}
-            })
+        val otp = intent?.getStringExtra("otp")
+        if (otp != "" && channelId != null ) {
+            val sendMessage = SendMessage(channelId, otp)
+            try {
+                bot?.execute(sendMessage, object : Callback<SendMessage?, SendResponse?> {
+                    override fun onResponse(request: SendMessage?, response: SendResponse?) {}
+                    override fun onFailure(request: SendMessage?, e: IOException?) {}
+                })
+            } catch (e: Exception) {
+            }
         }
-
         return START_NOT_STICKY
     }
+
+
+
     fun makeToast(text: String){
         val handler = Handler(Looper.getMainLooper())
         handler.post {
