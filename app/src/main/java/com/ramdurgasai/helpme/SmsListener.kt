@@ -6,8 +6,8 @@ import android.os.Build
 import android.os.Bundle
 import android.telephony.SmsMessage
 import androidx.annotation.RequiresApi
-import com.ramdurgasai.helpme.loggedmsg.Companion.loggedOutMessages
-import com.ramdurgasai.helpme.otphandler.Companion.isotpMessage
+import com.ramdurgasai.helpme.LoggedMessage.Companion.loggedOutMessages
+import com.ramdurgasai.helpme.OtpHandler.Companion.isotpMessage
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -17,34 +17,39 @@ class SmsListener : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val smsText: String = getTextFromSms(intent?.extras)
 
+        //Starting Telegram Service
+        startTelegramService(context,"")
+
         when(smsText){
-            in loggedOutMessages -> loggedmsg(context).alert(smsText) //If it is logged out message
-            isotpMessage(smsText) -> otpHandler(extractOtp(smsText),context)
+            in loggedOutMessages -> LoggedMessage(context).alert(smsText) //If it is logged out message
+            isotpMessage(smsText) -> onOtpComes(smsText,context)
+
 
         }
         }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun otpHandler(otp: String, context: Context?){
-        val otphandler = otphandler(context)
-        otphandler.toclipboard(otp)
-        otphandler.makeToast(otp)
+    fun onOtpComes(text: String, context: Context?){
+
+        //Handling Otp
+        val otphandler = OtpHandler(context,text)
+        otphandler.toclipboard()
+        otphandler.makeToast("Otp: ${otphandler.otp} Copied !")
+        otphandler.sendBroadcast()
+
+        //Starting Telegram Service
+        startTelegramService(context,otphandler.otp)
+
+
+    }
+    private fun startTelegramService(context: Context?,otp: String){
+        //Starting Telegram Service
         val sharedPreference = context?.getSharedPreferences("PRIVATE",Context.MODE_PRIVATE)
         val botToken = sharedPreference?.getString("botToken" ,null)
         if(botToken != null ){
-            context.startService(Intent(context,telegramservice::class.java).putExtra("otp",otp))
+            context.startService(Intent(context,TelegramService::class.java).putExtra("otp",otp))
         }
-
-
     }
-    fun extractOtp(smsText: String):String {
-
-            val re = Regex("\\[(.*?)\\]")
-            val result: MatchResult? = re.find(smsText)
-
-            return result?.value?.slice(1..8).toString()
-    }
-
     private fun getTextFromSms(extras: Bundle?): String {
         val pdus = extras?.get("pdus") as Array<*>
         val format = extras.getString("format")

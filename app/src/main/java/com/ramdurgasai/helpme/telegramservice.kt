@@ -1,10 +1,9 @@
 package com.ramdurgasai.helpme
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -19,14 +18,14 @@ import com.pengrad.telegrambot.UpdatesListener
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.response.SendResponse
+import com.ramdurgasai.helpme.OtpHandler.Companion.textFromOtp
 import java.io.IOException
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-class telegramservice: Service() {
+class TelegramService: Service() {
 
     var channelId : String? = null
     val CHANNEL_ID = 10
@@ -50,20 +49,38 @@ class telegramservice: Service() {
             }
             UpdatesListener.CONFIRMED_UPDATES_ALL
         }
+        //Starting ForeGround Service
+        startForeGroundService()
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            val CHANNEL_ID = "my_channel_01"
-            val channel = NotificationChannel(CHANNEL_ID,
-                    "Forground Notification",
-                    NotificationManager.IMPORTANCE_DEFAULT)
-            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("Helpme")
-                    .setContentText("Connected to Server").build()
-            startForeground(1, notification)
 
-        }
     }
+    private fun startForeGroundService(){
+        if (Build.VERSION.SDK_INT >= 26) {
+            val NOTIFICATION_CHANNEL_ID = "com.ramdurgasai.helpme"
+            val channelName = "Helpme Telegram Service"
+            val chan = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                channelName,
+                NotificationManager.IMPORTANCE_NONE
+            )
+            chan.lightColor = Color.BLUE
+            chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            val manager = (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)!!
+            manager!!.createNotificationChannel(chan)
+
+            val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            val notification = notificationBuilder.setOngoing(true)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Connected to Server")
+                .setPriority(NotificationManager.IMPORTANCE_MIN)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build()
+            startForeground(2, notification)
+            //App is running in background
+        }
+
+    }
+
     private fun updateHandler(update : Update) {
         val post = update.channelPost()
         var chat_id: String? = null
@@ -72,11 +89,15 @@ class telegramservice: Service() {
         }else{ return }
 
         if(post != null && chat_id != channelId){
-            val text = post.text()
-            if (text != null || text != "null"){
-                makeToast("Otp : " + text + " from server !" )
-                otphandler(applicationContext).toclipboard(text.toString())
-                buildNotification(text.toString())
+            val otp = post.text()
+            if (otp != null || otp != "null"){
+                val text = textFromOtp(otp)
+                val otphandler = OtpHandler(applicationContext,text)
+                otphandler.toclipboard()
+                otphandler.makeToast("Otp : " + otp + " from server !")
+                otphandler.sendBroadcast()
+
+                buildNotification(otp)
             }
 
         }
@@ -97,8 +118,6 @@ class telegramservice: Service() {
         return START_NOT_STICKY
     }
 
-
-
     fun makeToast(text: String){
         val handler = Handler(Looper.getMainLooper())
         handler.post {
@@ -108,8 +127,6 @@ class telegramservice: Service() {
         }
 
     }
-
-
 
     override fun onDestroy() {
         makeToast("Service Telegram is stopped")

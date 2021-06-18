@@ -58,4 +58,24 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <Switch
+        android:id="@+id/broadcastSwitch"
+        android:layout_width="307dp"
+        android:layout_height="30dp"
+        android:layout_marginBottom="4dp"
+        android:text="Broadcast"
+        app:layout_constraintBottom_toTopOf="@+id/dndSwitch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/NotificationAccessButton"
+        android:layout_width="271dp"
+        android:layout_height="38dp"
+        android:text="NotificationAccessButton"
+        app:layout_constraintBottom_toTopOf="@+id/broadcastSwitch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/save_button" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

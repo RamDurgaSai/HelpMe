@@ -11,7 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.os.postDelayed
 
 @Suppress("DEPRECATION")
-class mediaservice:Service() {
+class MediaService:Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
     TODO()
