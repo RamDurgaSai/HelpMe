@@ -41,6 +41,7 @@ class OtpHandler(val context: Context?,val text: String) {
             val intent = Intent()
             intent.action = "com.ramdurgasai.helpme.SMS_RETRIEVED"
             intent.putExtra("com.ramdurgasai.helpme.SMS_BODY", text)
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
             context?.sendBroadcast(intent)
             Log.d("otpHandler","Broadcast Sent Successfully")
         }

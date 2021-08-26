@@ -7,9 +7,10 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import java.time.LocalTime
+import kotlin.time.ExperimentalTime
 
 
-
+@ExperimentalTime
 class LoggedMessage(val context: Context?) {
 
 
@@ -56,8 +57,8 @@ class LoggedMessage(val context: Context?) {
         val currentHour: Int = LocalTime.now().hour
         val currentMinute: Int = LocalTime.now().minute
         if (currentHour == 10) return currentMinute in 30..59
-        if (currentHour == 23) return currentMinute in 0..5 // Decreased Time from 11:30 to 11:05
-        return currentHour in 10..23
+        // Decreased Time from 11:30 to 11:00
+        return currentHour in 10..22
 
     }
 

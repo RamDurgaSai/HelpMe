@@ -1,6 +1,6 @@
 package com.ramdurgasai.helpme
 
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.widget.Toast
 import android.content.Context
@@ -8,11 +8,29 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.*
 import androidx.annotation.RequiresApi
-import androidx.core.os.postDelayed
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 @Suppress("DEPRECATION")
 class MediaService:Service() {
+    var intent:Intent? = null
+    var mediaPlayer:MediaPlayer? = null
+    var vibrator:Vibrator? = null
+    lateinit var audioManager: AudioManager
+    var minVolume : Int? = null
+    var maxVolume :Int? = null
+    var volume: Int? = null
+    var step:Int? = null
 
+    @RequiresApi(Build.VERSION_CODES.P)
+    override fun onCreate() {
+        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+        volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        step = (maxVolume?.minus(minVolume!!))?.div(10)
+        super.onCreate()
+    }
     override fun onBind(intent: Intent?): IBinder? {
     TODO()
     }
@@ -20,71 +38,67 @@ class MediaService:Service() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
         val isOnlyVibrate = intent?.getBooleanExtra("OnlyVibrate",false)
 
-        val vibrator = vibrate() // Let's Vibrate
-
-        if (isOnlyVibrate == true){
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                setMinVolume()
-            }
-        }else{
-            setMaxVolume()
+        vibrate() // Let's Vibrate
+        if (!isOnlyVibrate!!){ // Start Media Player and Audio Service If not DND Mode
+            start_alert()
+            var vol:Int = step!!
+            do {
+                setVolume(vol) // Set volume
+                SystemClock.sleep(2000) // Wait some time
+                if (getPresentVolume() == vol) {
+                    //No interruption
+                    // Can be continue
+                    vol += step!!
+                } else {
+                    //Volume changed by user
+                    //Break the Loop -- and set low
+                    mediaPlayer!!.stop()
+                    stop()
+                    break
+                }
+            }while (vol <= this.maxVolume!!)
         }
-
-        val mediaPlayer: MediaPlayer? = MediaPlayer.create(applicationContext, R.raw.alert)
-        mediaPlayer?.start()
-
-        mediaPlayer?.setOnCompletionListener {
-           stop(intent,vibrator,mediaPlayer) // Stoping Service ifself after alterting
-        }
-
-        // Add a hundler
-        val handler : Handler? = Handler()
-        val runnable : Runnable = Runnable { fun run(){
-            stop(intent,vibrator,mediaPlayer) // Stoping Service ifself after waiting a minute ..
-            // This will help when If oncompletion listener didn't work
-            Toast.makeText(applicationContext,"Handler theread take aways media player",Toast.LENGTH_LONG).show()
-        } }
-        handler?.postDelayed(runnable,50*1000)
-
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
+        stop()
         super.onDestroy()
     }
+    private fun start_alert(){
+        val mediaPlayer: MediaPlayer? = MediaPlayer.create(applicationContext, R.raw.alert)
+        mediaPlayer?.start()
+        mediaPlayer?.setOnCompletionListener {
+            stop() // Stoping Service ifself after alterting
+        }
 
-    fun setMaxVolume(){
-        val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0)
-    }
-    @RequiresApi(Build.VERSION_CODES.P)
-    fun setMinVolume(){
-        val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC), 0)
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun vibrate():Vibrator{
-        val vibrator = applicationContext?.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    fun vibrate(){
+        vibrator = applicationContext?.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val mVibratePattern = longArrayOf(0, 400, 100, 600, 100, 400, 100, 400)
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(mVibratePattern, 0))
+            vibrator?.vibrate(VibrationEffect.createWaveform(mVibratePattern, 0))
             }
-
         else{
-            vibrator.vibrate(400)
+            vibrator?.vibrate(400)
             Toast.makeText(applicationContext,"Unable to Vibrate the device",Toast.LENGTH_LONG).show()
         }
-        return vibrator
-
     }
-    fun stop(intent: Intent?,vibrator : Vibrator?, mediaPlayer: MediaPlayer? ) {
+    fun stop() {
         mediaPlayer?.release() // Releasing Mediaplayer
         vibrator?.cancel() // To Stop Vibration After Playing Sound
-        applicationContext.stopService(intent)
-
+    }
+    private fun getPresentVolume():Int{
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+    }
+    private fun setVolume(volume:Int){
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC, volume, 0)
     }
 }
 

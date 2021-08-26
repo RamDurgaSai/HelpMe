@@ -2,12 +2,12 @@ package com.ramdurgasai.helpme
 
 import android.Manifest
 import android.app.ActivityManager
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var dndModeButton:Switch
     lateinit var broadcastSwitch:Switch
     lateinit var NotificationAccessButton:Button
-
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -64,6 +63,8 @@ class MainActivity : AppCompatActivity() {
         ///////////////////////
 
     }
+
+
 
 
     override fun onResume() {
@@ -119,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 editor.putString("botToken",botToken).apply()
                 editor.putString("channelId",channelId).apply()
-                Toast.makeText(this,"Updated Successfully-1",Toast.LENGTH_LONG).show()
+                Toast.makeText(this,"Updated Successfully",Toast.LENGTH_LONG).show()
                 startTelegramSerivce()
 
             }
@@ -128,8 +129,13 @@ class MainActivity : AppCompatActivity() {
 
         dndModeButton.setOnClickListener { view: View? -> when(view?.id){
             R.id.dndSwitch -> {
-                editor.putBoolean("DND", dndModeButton.isChecked).apply()
-                if(dndModeButton.isChecked){
+                val isChecked = dndModeButton.isChecked
+                ContextCompat.startForegroundService(this,Intent(applicationContext,TelegramService::class.java).putExtra("dnd",isChecked.toString()))
+                if (sp.getString("botToken",null) != null && !isServiceRunning(this,TelegramService::class.java)){
+                    ContextCompat.startForegroundService(this,Intent(applicationContext,TelegramService::class.java).putExtra("dnd",isChecked.toString()))
+                }
+                editor.putBoolean("DND", isChecked).apply()
+                if(isChecked){
                     Toast.makeText(this,"DND is Activated",Toast.LENGTH_LONG).show()
                 }else{
                     Toast.makeText(this,"DND is Deactivated",Toast.LENGTH_LONG).show()
@@ -158,7 +164,6 @@ class MainActivity : AppCompatActivity() {
     fun startTelegramSerivce(){
         if (sp.getString("botToken","") != "" && !isServiceRunning(this,TelegramService::class.java)){
             val intent = Intent(applicationContext, TelegramService::class.java)
-            intent.putExtra("otp", "")
             ContextCompat.startForegroundService(this, intent)
 
         }

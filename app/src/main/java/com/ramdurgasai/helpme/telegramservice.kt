@@ -22,14 +22,21 @@ import com.ramdurgasai.helpme.OtpHandler.Companion.textFromOtp
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.time.ExperimentalTime
 
 
+@ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.O)
 class TelegramService: Service() {
 
     var channelId : String? = null
     val CHANNEL_ID = 10
     private var bot: TelegramBot? = null
+
+    val NOTIFICATION_CHANNEL_ID = "com.ramdurgasai.helpme"
+    val channelName = "Helpme Telegram Service"
+    val NotificationTitle = "Connected to Server"
+    val NotificationDNDTitle = "DND is Activated - Tap to Disable"
 
 
 
@@ -41,7 +48,7 @@ class TelegramService: Service() {
 
         if(botToken == null){ return} // Skip If no botToken
 
-        println("Telegram Service is Started ....")
+
         bot = TelegramBot(botToken.toString())
         bot?.setUpdatesListener { updates ->
             for(update in updates){
@@ -49,36 +56,54 @@ class TelegramService: Service() {
             }
             UpdatesListener.CONFIRMED_UPDATES_ALL
         }
-        //Starting ForeGround Service
-        startForeGroundService()
+
+
+        if(getSharedPreferences("PRIVATE", MODE_PRIVATE)
+                .getBoolean("DND",false))
+                    startForeGroundService(NotificationDNDTitle)
+        else startForeGroundService()
+
 
 
     }
-    private fun startForeGroundService(){
+    private fun startForeGroundService(title:String = NotificationTitle){
         if (Build.VERSION.SDK_INT >= 26) {
-            val NOTIFICATION_CHANNEL_ID = "com.ramdurgasai.helpme"
-            val channelName = "Helpme Telegram Service"
-            val chan = NotificationChannel(
+
+            startForeground(CHANNEL_ID, getNotification(title))
+            //App is running in background
+        }
+
+    }
+
+    private fun getNotification(title: String): Notification? {
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 channelName,
                 NotificationManager.IMPORTANCE_NONE
             )
-            chan.lightColor = Color.BLUE
-            chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            notificationChannel.lightColor = Color.BLUE
+            notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             val manager = (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)!!
-            manager!!.createNotificationChannel(chan)
+            manager!!.createNotificationChannel(notificationChannel)
+
+            val contentIntent = PendingIntent.getActivity(
+                this,
+                0, Intent(this, MainActivity::class.java), 0
+            )
 
             val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             val notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Connected to Server")
+                .setContentTitle(title).setContentIntent(contentIntent)
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
-            startForeground(2, notification)
-            //App is running in background
-        }
+            return notification
 
+
+        }
+        return null
     }
 
     private fun updateHandler(update : Update) {
@@ -96,7 +121,7 @@ class TelegramService: Service() {
                 otphandler.toclipboard()
                 otphandler.makeToast("Otp : " + otp + " from server !")
                 otphandler.sendBroadcast()
-
+                // Deprecated
                 buildNotification(otp)
             }
 
@@ -105,7 +130,7 @@ class TelegramService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val otp = intent?.getStringExtra("otp")
-        if (otp != "" && channelId != null ) {
+        if (otp != null && channelId != null ) {
             val sendMessage = SendMessage(channelId, otp)
             try {
                 bot?.execute(sendMessage, object : Callback<SendMessage?, SendResponse?> {
@@ -113,6 +138,20 @@ class TelegramService: Service() {
                     override fun onFailure(request: SendMessage?, e: IOException?) {}
                 })
             } catch (e: Exception) {
+            }
+        }
+        val dndStatus = intent?.getStringExtra("dnd")
+
+
+        if(dndStatus != null){
+            val dndChecked = dndStatus.toBoolean()
+            when(dndChecked){
+                true ->{
+                    startForeGroundService(title = NotificationDNDTitle)
+                }
+                false ->{
+                    startForeGroundService()
+                }
             }
         }
         return START_NOT_STICKY

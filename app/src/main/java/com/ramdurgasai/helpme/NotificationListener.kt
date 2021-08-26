@@ -7,6 +7,9 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import androidx.annotation.RequiresApi
 import com.ramdurgasai.helpme.LoggedMessage.Companion.loggedOutMessages
+import kotlin.time.ExperimentalTime
+
+@ExperimentalTime
 @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class NotificationListener : NotificationListenerService() {
 
